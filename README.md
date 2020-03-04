@@ -1,3 +1,3 @@
 # dia_improvement
 
-This repo provides improvements for the difference imaging analysis.
+This repo provides improvements to the difference imaging analysis.
