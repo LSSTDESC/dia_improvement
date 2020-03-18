@@ -30,17 +30,14 @@ class ImageAnalyzer(object):
         
         # Calculate mean of image, variance of image, mean of vari
         image, vari, mask = ImageAnalyzer.unpack_exposure(self.exposure)
-        self.clip_image, _, _ = stats.sigmaclip(
-            ImageAnalyzer.mask_data(image, mask, fill=False)
-        )
-        self.clip_variance, _, _ = stats.sigmaclip(
-            ImageAnalyzer.mask_data(vari, mask, fill=False)
-        )
-        self.mean, self.vari_image, self.mean_of_vari = ImageAnalyzer._cal_mean_vari(self.clip_image, self.clip_variance)
+        
+        self.clip_image, _, _    = stats.sigmaclip(ImageAnalyzer.mask_data(image, mask, fill=False))
+        self.clip_variance, _, _ = stats.sigmaclip(ImageAnalyzer.mask_data(vari,  mask, fill=False))
+        self.mean, self.vari_image, self.mean_of_vari = ImageAnalyzer._cal_mean_vari(self.clip_image, 
+                                                                                     self.clip_variance)
         
         # Calculate covariance
-        norm  = ImageAnalyzer.mask_data(image/np.sqrt(vari), mask,
-                                                  fill=True, fill_value = 0)
+        norm  = ImageAnalyzer.mask_data(image/np.sqrt(vari), mask, fill=True, fill_value = 0)
         self.cov_matrix, self.cov = ImageAnalyzer.cal_covariance(norm)
         
     @staticmethod
@@ -53,14 +50,16 @@ class ImageAnalyzer(object):
     
     @staticmethod
     def translateMask(mask):
-        num_bits = 18
+        NUM_BITS = 18
+        TO_AND = 2**np.arange(NUM_BITS).reshape([1, NUM_BITS])
+        
         x = mask.array 
         xshape = list(x.shape)
         x = x.reshape([-1, 1])
-        to_and = 2**np.arange(num_bits).reshape([1, num_bits])
-        unpck = (x & to_and).astype(bool).astype(int).reshape(xshape + [num_bits])
-        codes = mask.getMaskPlaneDict()
         
+        unpck = (x & TO_AND).astype(bool).reshape(xshape + [NUM_BITS])  # ditched the astype(int)
+        
+        codes = mask.getMaskPlaneDict()
         mask_dict = {} 
         for k, v in codes.items(): 
             mask_dict[k] = unpck[:, :, v]
@@ -70,24 +69,30 @@ class ImageAnalyzer(object):
         new_mask |= mask_dict['CR']
         new_mask |= mask_dict['EDGE']
         new_mask |= mask_dict['SAT']
-        new_mask |= mask_dict['SENSOR_EDGE']
+        new_mask |= mask_dict['UNMASKEDNAN']
+        new_mask |= mask_dict['REJECTED']
+        new_mask |= mask_dict['CLIPPED'] 
+        new_mask |= mask_dict['INTRP']
         
-        return new_mask == 0
-        
+        return new_mask.astype(bool) # we have 1s where data is masked (non-valid)
     
     @staticmethod
     def mask_data(data, mask, fill=False, fill_value=0):
-        # If fill is True, the data at mask=True would be return. It is a flattened array.
-        # If fill is False, the data at mask=True would be replaced by fill_value, a 2d
+        # If fill is False, the data at mask=False would be return. It is a flattened array.
+        # If fill is True, the data at mask=True would be replaced by fill_value, a 2d
         # array will be return.
+        
         data2 = data.copy()
-        if not np.any(mask):
+        mask2 = np.logical_or(mask, np.isinf(data2))
+        mask2 = np.logical_or(mask, np.isnan(data2))
+
+        if not np.any(~mask2):
             return None
-        elif fill:
-            data2[mask] = fill_value
+        elif fill is True:
+            data2[mask2] = fill_value
             return data2
         else:
-            return data2[mask].flatten()
+            return data2[~mask2].flatten()
     
     @staticmethod
     def _cal_mean_vari(image, vari):
@@ -107,7 +112,7 @@ class ImageAnalyzer(object):
             np.roll(norm_data, 1, 0), np.roll(norm_data, -1, 0),
             np.roll(norm_data, 1, 1), np.roll(norm_data, -1, 1),
             np.roll(np.roll(norm_data, 1, 0), 1, 1), np.roll(np.roll(norm_data, 1, 0), -1, 1),
-            np.roll(np.roll(norm_data, -1, 0), 1, 1), np.roll(np.roll(norm_data, -1, 0), -1, 1),
+            np.roll(np.roll(norm_data,-1, 0), 1, 1), np.roll(np.roll(norm_data,-1, 0), -1, 1),
             np.roll(norm_data, 2, 0), np.roll(norm_data, -2, 0),
             np.roll(norm_data, 2, 1), np.roll(norm_data, -2, 1),
             np.roll(norm_data, 3, 0), np.roll(norm_data, -3, 0),
@@ -117,12 +122,13 @@ class ImageAnalyzer(object):
             np.roll(norm_data, 5, 0), np.roll(norm_data, -5, 0),
             np.roll(norm_data, 5, 1), np.roll(norm_data, -5, 1),
             np.roll(np.roll(norm_data, 2, 0), 1, 1), np.roll(np.roll(norm_data, 2, 0), -1, 1),
-            np.roll(np.roll(norm_data, -2, 0), 1, 1), np.roll(np.roll(norm_data, -2, 0), -1, 1),
+            np.roll(np.roll(norm_data,-2, 0), 1, 1), np.roll(np.roll(norm_data,-2, 0), -1, 1),
             np.roll(np.roll(norm_data, 1, 0), 2, 1), np.roll(np.roll(norm_data, 1, 0), -2, 1),
-            np.roll(np.roll(norm_data, -1, 0), 2, 1), np.roll(np.roll(norm_data, -1, 0), -2, 1),
+            np.roll(np.roll(norm_data,-1, 0), 2, 1), np.roll(np.roll(norm_data,-1, 0), -2, 1),
             np.roll(np.roll(norm_data, 2, 0), 2, 1), np.roll(np.roll(norm_data, 2, 0), -2, 1),
-            np.roll(np.roll(norm_data, -2, 0), 2, 1), np.roll(np.roll(norm_data, -2, 0), -2, 1),
+            np.roll(np.roll(norm_data,-2, 0), 2, 1), np.roll(np.roll(norm_data,-2, 0), -2, 1),
         ]
+
         shifted_imgs = np.vstack([i.flatten() for i in shifted_imgs])
         covariance_matrix = np.cov(shifted_imgs, bias=1)
         trace = np.trace(covariance_matrix)
@@ -165,38 +171,41 @@ class ImageAnalyzer(object):
         plt.title(title)
         plt.legend()
         
-    @staticmethod
     # Plot the covariance matrix.
+    @staticmethod
     def plot_cov(cov_matrix, title='covariance matrix'):
         plt.figure()
         plt.imshow(cov_matrix)
         plt.title(title)
         plt.colorbar()
 
-
-    def cutout_analysis(self, xpos, ypos, cutout_size=60,
-                        fill=False, fill_value=0, clip_image=True,
-                        alpha=0.05,
-                        image_show=False, hist_show=False, cov_show=False):
+    def cutout_analysis(self, xpos, ypos, cutout_size=60, fill=False, fill_value=0, 
+                        clip_image=True, alpha=0.05, image_show=False, 
+                        hist_show=False, cov_show=False):
         """Calculate statistics of a cutout exposure.
-        Parameters:
-        fill: Fill the mask=True pixels with fill_value
-        clip_image: Do sigmaclip to image and variance
-        alpha: The significance value of the hypothesis test
-        Returns:
-        Mean: Mean of the image
-        vari_image: variance of the image
-        mean_of_vari: Mean of the variance plane
-        standard_norm_p: P value for testing whehter the normlized post stamp is consisntent with
-                         the standard normal distribution
-        standard_norm_test: Whether the normlized post stamp is consisntent with the standard
-                            normal distribution
-        skybk_p: P value for testing whether the post stamp and the sky background are from the same 
-                 distribution
-        skybk_test: Whether the post stamp and the sky background are from the same distribution
-        covariance: Covariance of the post stamp
-        """
+        Parameters
+        -----------
+        fill: bool,
+            Fill the mask=True pixels with fill_value
+        clip_image: bool,
+            Do sigmaclip to image and variance
+        alpha: float,
+            The significance value of the hypothesis test
         
+        Returns:
+        --------
+        Mean: float, Mean of the image
+        vari_image: float, variance of the image
+        mean_of_vari: float, Mean of the variance plane
+        standard_norm_p: float, P value for testing whehter the normlized post stamp is consisntent with
+            the standard normal distribution
+        standard_norm_test: bool, Whether the normlized post stamp is consisntent with the standard
+            normal distribution
+        skybk_p: float, P value for testing whether the post stamp and the sky background are from the same 
+            distribution
+        skybk_test: bool, Whether the post stamp and the sky background are from the same distribution
+        covariance: array, float, Covariance of the post stamp
+        """
         
         analysis_list = ['mean', 'vari_image', 'mean_of_vari', 'standard_norm_p',
                          'standard_norm_test', 'skybk_p', 'skybk_test', 'covariance']
