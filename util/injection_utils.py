@@ -185,8 +185,7 @@ def display_exposure(exposure, x, y, cutout_size=60, coord_list=None, scale=None
     for coord in coord_list:
         coord_x, coord_y = coord
         display.dot('o', coord_x, coord_y, ctype='blue')
-        
-    
+
     plt.title(title)
     if save_name:
         plt.savefig(save_name, dpi=500)
