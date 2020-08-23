@@ -4,6 +4,21 @@ import lsst.geom as geom
 import lsst.afw.image as afwImage
 import lsst.afw.display as afwDisplay
 
+def get_pix_coord_from_src(src_table, coord_type='base_NaiveCentroid'):
+    """This function extracts pixel coordinates from a source table.
+       src_table:        The source table for extracting coordinates, in astropy table format
+       coord_type:       The coordinate type, (e.g. 'base_NaiveCentroid', 'base_PeakCentroid',
+                         'base_SdssCentroid'...) Default is 'base_NaiveCentroid'
+       Returns:
+       A list of coordinates ([[x_1, y_1], [x_2, y_2], [x_3, y_3], ...]), sorted the same as
+       the src_table's rows
+    """
+    coord_list = []
+    for row in src_table:
+        x, y = row['{}_x'.format(coord_type)], row['{}_y'.format(coord_type)]
+        coord_list.append([x, y])
+    return coord_list
+
 def inject_star(exposure, photoCalib, x, y, magVar, poisson=False, seed=0):
     """This function injects a fake source onto an exposure
        exposure:    The exposure for injection
