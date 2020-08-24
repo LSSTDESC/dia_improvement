@@ -1,4 +1,5 @@
 import numpy as np
+
 from lsst.daf.persistence import Butler
 import lsst.geom as geom
 import lsst.afw.image as afwImage
@@ -20,7 +21,7 @@ def get_pix_coord_from_src(src_table, coord_type='base_NaiveCentroid'):
     return coord_list
 
 def inject_star(exposure, photoCalib, x, y, magVar, poisson=False, seed=0):
-    """This function injects a fake source onto an exposure
+    """This function injects a fake source onto an exposure.
        exposure:    The exposure for injection
        photoCalib:  lsst.afw.image.photoCalib.PhotoCalib object
        x:           injected x pixel coordinate
@@ -73,7 +74,7 @@ def inject_star(exposure, photoCalib, x, y, magVar, poisson=False, seed=0):
 
 def inject_fakes_to_calexp(calexp_repo, calexp_id, magVar, coords, poisson=False):
     """This function injects fakes onto a calexp exposure at given positions.
-       caelxp_repo:    An empty calexp repo which is used to save the injected exposure.
+       caelxp_repo:    An empty calexp repo which is used to save the injected exposure
        calexp_id:      The data id of the calexp exposure
        magVar:         The injected magnitude
        coords:         A list of [x, y] pixel coordinates
@@ -91,7 +92,7 @@ def inject_fakes_to_calexp(calexp_repo, calexp_id, magVar, coords, poisson=False
         
 def remove_flag_src(src_table):
     """This function removes sources with flags.
-       src_table:      The source table(astropy table) we want to apply flag selection.
+       src_table:      The source table(astropy table) we want to apply flag selection
     """
     FLAG_LIST = ['base_PixelFlags_flag_offimage', 'base_PixelFlags_flag_edge', 'base_PixelFlags_flag_interpolated',
                 'base_PixelFlags_flag_saturated', 'base_PixelFlags_flag_cr', 'base_PixelFlags_flag_bad',
@@ -123,7 +124,7 @@ def check_diaSrc_detecion(check_coords, src_table, half_width=4):
        missed_set:        A set of diaSrc indexes(ordered as the src_table) of the missed sources
        dia_list:          A list of astropy tables. The first dimension corresponds to the indexes
                           given from the check_coords. The second dimension collects the diaSrc table
-                          of the matched sources. If a source is missed, it corresponds to an empty list.
+                          of the matched sources. If a source is missed, it corresponds to an empty list
                           e.g. [[diaSrc_0], [], [diaSrc_2], [],...]
             
     """
