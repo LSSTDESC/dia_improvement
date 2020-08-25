@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 from lsst.daf.persistence import Butler
 import lsst.geom as geom
@@ -198,9 +199,10 @@ def display_exposure(exposure, x, y, cutout_size=60, coord_list=None, scale=None
         display.show_colorbar()
     display.dot('o', xy.getX(), xy.getY(), ctype='red')
     
-    for coord in coord_list:
-        coord_x, coord_y = coord
-        display.dot('o', coord_x, coord_y, ctype='blue')
+    if coord_list:
+        for coord in coord_list:
+            coord_x, coord_y = coord
+            display.dot('o', coord_x, coord_y, ctype='blue')
 
     plt.title(title)
     if save_name:
