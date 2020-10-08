@@ -1,0 +1,8 @@
+!RepositoryCfg_v1
+_mapper: !!python/name:lsst.obs.lsst.imsim.ImsimMapper ''
+_mapperArgs: {}
+_parents:
+- /global/cfs/projectdirs/lsst/production/DC2_ImSim/Run2.2i/desc_dm_drp/v19.0.0-v1/rerun/run2.2i-coadd-wfd-dr6-v1-grizy
+_policy: null
+_root: null
+dirty: true
