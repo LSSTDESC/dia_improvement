@@ -1,10 +1,15 @@
 import os
+import numpy as np
 import pandas as pd
+import sqlite3
 
+from astropy.table import Table
+import astropy.units as u
 from lsst.daf.persistence import Butler
 import injection_utils as iu
+import data_process_utils as dpu
 
-class FakeInjectionPipeline():
+class fakeInjectionPipeline():
     """fake_dir, patch_list, host_mag_list, fake_mag_list, calexp_info_dict, injection_coord_dict
        
     patch_list:                a list of patch ids, e.g. patch_list = ['00', '01', '33']
@@ -25,6 +30,10 @@ class FakeInjectionPipeline():
         # of the calexp image
         self.calexp_info_dict = calexp_info_dict
         self.injection_coord_dict = injection_coord_dict
+        self.KEYS = ['id', 'coord_ra', 'coord_dec', 'base_NaiveCentroid_x', 'base_NaiveCentroid_y',
+                     'base_PsfFlux_instFlux', 'base_PsfFlux_instFluxErr',
+                     'matched_status', 'injected_x','injected_y','injected_instFlux', 'fake_mag',
+                     'visit', 'detector', 'filter']
         
     def make_fake_repo(self):
         for patch in self.patch_list:
@@ -63,8 +72,10 @@ class FakeInjectionPipeline():
                         
     def inject_fakes(self, poisson=False):
         for patch in self.patch_list:
+            print('patch: ', patch)
             
             for host_mag in self.host_mag_list:
+                print('host mag: ', host_mag)
                 calexp_info = self.calexp_info_dict[f'{patch}_{host_mag}']
 
                 for index, row in calexp_info.iterrows():
@@ -81,8 +92,10 @@ class FakeInjectionPipeline():
                             )
                         calexp_id = {'visit': visit, 'detector': detector, 'filter': filt}
                         iu.inject_fakes_to_calexp(calexp_repo, calexp_id, fake_mag, injection_coords, poisson=poisson)
+            print('\n')
+        print('injection is done')
                     
-    def write_subtraction_script(self, diff_dir, config, file_path='./subtraction.sh'):
+    def get_subtraction_script(self, diff_dir, config, file_path='./subtraction.sh'):
         with open(f'{file_path}', "w+") as file:
             file.write('#！/bin/bash\n\n')
             for patch in self.patch_list:
@@ -112,18 +125,20 @@ class FakeInjectionPipeline():
                             file.write(line)
         print(f'please run this file: {file_path}')
         
-    def get_detection(self, diff_dir, flux_dir):
+    def get_detection(self, diff_dir, flux_dir, matched_radius = 4, db_name='detection.sqlite'):
+        fake_src_name='fake_src'
+        artifact_name='artifact'
         os.makedirs(flux_dir, exist_ok=True)
-        MISSED = -99999.
-        HALF_WIDTH = 4
-        COLUMNS = ['id', 'coord_ra', 'coord_dec', 
-                   'base_NaiveCentroid_x', 'base_NaiveCentroid_y',
-                   'base_PsfFlux_instFlux', 'base_PsfFlux_instFluxErr']
+
+        dbpath = os.path.join(flux_dir, db_name)
+        dbconn = sqlite3.connect(dbpath, timeout=60)
         for patch in self.patch_list:
+            print('patch: ', patch)
             
             for host_mag in self.host_mag_list:
+                print('host mag: ', host_mag)
                 calexp_info = self.calexp_info_dict[f'{patch}_{host_mag}']
-
+                
                 for index, row in calexp_info.iterrows():
                     visit = row['visit']
                     filt = row['filter']
@@ -140,36 +155,121 @@ class FakeInjectionPipeline():
                         src_butler = Butler(src_repo)
                         src_table = src_butler.get('deepDiff_diaSrc', dataId=diff_id)
                         src_table = src_table.asAstropy()
+                        src_df = src_table.to_pandas()
+                        src_count = len(src_df)
+                        src_df.loc[:, 'visit'] = np.repeat(visit, src_count)
+                        src_df.loc[:, 'detector'] = np.repeat(detector, src_count)
+                        src_df.loc[:, 'filter'] = np.repeat(filt, src_count)
+                        src_df.loc[:, 'fake_mag'] = np.repeat(fake_mag_str, src_count)
+                        src_df.loc[:, 'host_mag'] = np.repeat(host_mag, src_count) 
+                        src_df.loc[:, 'patch'] = np.repeat(patch, src_count)
+                        
+                        src_xy = src_df[['base_NaiveCentroid_x', 'base_NaiveCentroid_y']].to_numpy()
+                        
                         src_calib = src_butler.get('deepDiff_differenceExp_photoCalib', dataId=diff_id)
                         flux_injected_inst = src_calib.magnitudeToInstFlux(fake_mag)
+                        
+                        matched_status, matched_id = dpu.two_direction_match(injection_coords, src_xy, radius=matched_radius)
+                        matched_table = src_df.iloc[matched_id].copy()
+                        matched_table.loc[:, 'matched_status'] = matched_status
+                        matched_table.loc[:, 'injected_x'] = injection_coords[:, 0]
+                        matched_table.loc[:, 'injected_y'] = injection_coords[:, 1]
+                        matched_table.loc[:, 'injected_instFlux'] = np.repeat(flux_injected_inst, len(matched_status))
+                        
+                        fake_id = matched_id[matched_status]
+                        artifact_table = src_df.drop(index=fake_id, inplace=False)
+                        
+                        diff_exp = src_butler.get('deepDiff_differenceExp', diff_id)
+                        bbox = diff_exp.getBBox()
+                        wcs = diff_exp.getWcs()
+                        
+                        artifact_table = dpu.remove_variable(artifact_table, bbox, wcs, matched_radius=4)
+                        
+                        matched_table.to_sql(fake_src_name, dbconn, if_exists='append')
+                        artifact_table.to_sql(artifact_name, dbconn, if_exists='append')
+            print('\n')
+        print(f"detection results are saved in {flux_dir}/{db_name}")
+        print(f'{fake_src_name} contains the fake information, and {artifact_name} contains the artifact information')
+                        
+    def get_detection_coord(self, flux_db_path, coord_dir):
+        flux_conn = sqlite3.connect(flux_db_path)
 
-                        detect_dict = {}
-                        for col in COLUMNS:
-                            detect_dict[col] = []
+        for patch in self.patch_list:
+            
+            for host_mag in self.host_mag_list:
+                calexp_info = self.calexp_info_dict[f'{patch}_{host_mag}']
 
-                        _, _, dia_list = iu.check_diaSrc_detecion(injection_coords, src_table, half_width=HALF_WIDTH)
+                for index, row in calexp_info.iterrows():
+                    visit = row['visit']
+                    filt = row['filter']
+                    detector = row['detector']
+                    
+                    dir_path = os.path.join(coord_dir, f'{patch}_{host_mag}_{visit}_{detector}_{filt}')
+                    os.makedirs(dir_path, exist_ok=True)
+
+                    for fake_mag in self.fake_mag_list:
+                        fake_mag_str = str(fake_mag).replace('.', '')
+                        flux_query = (
+                            f'SELECT id, coord_ra, coord_dec, base_PsfFlux_instFlux, base_PsfFlux_instFluxErr, '
+                            f'injected_instFlux, matched_status FROM fake_src '
+                            f"WHERE patch='{patch}' AND host_mag = host_mag AND fake_mag = {fake_mag_str} "
+                            f"AND visit = {visit} AND filter = '{filt}' AND detector = {detector} AND matched_status = 1"
+                            )
+                        detected_coord = pd.read_sql_query(flux_query, flux_conn)
+                        coord_table = Table.from_pandas(detected_coord)
+                        coord_table['coord_ra'] = coord_table['coord_ra'] * u.rad
+                        coord_table['coord_dec'] = coord_table['coord_dec'] * u.rad
+                        save_name = f'coord_{fake_mag_str}.fits'
+                        save_path = os.path.join(
+                            dir_path, save_name
+                            )
+                        coord_table.write(save_path, format='fits', overwrite=True)
+        print(f'forced photometry coordinates are saved in {coord_dir}')
+                        
+    def get_forced_phot_script(self, diff_dir, coord_dir, forced_dir, config, file_path='./forcd.sh'):
+        with open(f'{file_path}', "w+") as file:
+            for patch in self.patch_list:
+                print('patch: ', patch)
+                
+                for host_mag in self.host_mag_list:
+                    print('host mag: ', host_mag)
+                    calexp_info = self.calexp_info_dict[f'{patch}_{host_mag}']
+
+                    for index, row in calexp_info.iterrows():
+                        visit = row['visit']
+                        filt = row['filter']
+                        detector = row['detector']
+                        
 
 
-                        for j in range(len(dia_list)):
-                            if not dia_list[j]:
-                                for col in COLUMNS:
-                                    detect_dict[col].append(MISSED)
-
-                            else:
-                                detected_sources = dia_list[j].copy()
-                                detected_sources.sort('base_PsfFlux_instFlux')
-                                detected_sources.reverse()
-                                for col in COLUMNS:
-                                    detect_dict[col].append(detected_sources[0][col])
-                        detect_dict['injected_x'] = injection_coords[:, 0]
-                        detect_dict['injected_y'] = injection_coords[:, 1]
-                        detect_dict['injected_flux'] = [flux_injected_inst for i in range(len(injection_coords[:, 0]))]
-                        detect_df = pd.DataFrame(detect_dict)
-
-                        save_path = os.path.join(flux_dir,
-                                                 f'{patch}_{host_mag}_{visit}_{detector}_{filt}_{fake_mag_str}.csv')
-                        detect_df.to_csv(save_path, index=False)
-
-
-
-
+                        for fake_mag in self.fake_mag_list:
+                            fake_mag_str = str(fake_mag).replace('.', '')
+                            
+                            fake_path = os.path.join(
+                                self.fake_dir, f'{patch}_{host_mag}_{visit}_{detector}_{filt}/fake_{fake_mag_str}'
+                            )
+                            
+                            diff_path = os.path.join(
+                                diff_dir, f'{patch}_{host_mag}_{visit}_{detector}_{filt}/diff_{fake_mag_str}'
+                            )
+                            
+                            coord_path = os.path.join(
+                                coord_dir, f'{patch}_{host_mag}_{visit}_{detector}_{filt}/coord_{fake_mag_str}.fits'
+                            )
+                            
+                            forced_path = os.path.join(
+                                forced_dir, f'{patch}_{host_mag}_{visit}_{detector}_{filt}/forced_{fake_mag_str}'
+                            )
+                            
+                            line = f'forcedPhotCatalogDia.py {fake_path} \\\n'
+                            file.write(line)
+                            line = f'    --output {diff_path} \\\n'
+                            file.write(line)
+                            line = f'    --id visit={visit} detector={detector} \\\n'
+                            file.write(line)
+                            line = f'    -c catalogName={coord_path} outputDir={forced_path} -C {config} \\\n'
+                            file.write(line)
+                            line = '    --clobber-versions --clobber-config\n\n'
+                            file.write(line)
+                print('\n')
+        print(f'please run this file: {file_path}')
