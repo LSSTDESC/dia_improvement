@@ -30,3 +30,12 @@ Reference:
 [AL algorithm](https://arxiv.org/abs/astro-ph/9712287)
 [ZOGY algorithm](https://arxiv.org/abs/1601.02655)
 [Regularization and model selection techniques](https://arxiv.org/pdf/1512.04655.pdf)
+
+### Software Dependencies
+
+To successfully run the fake injection pipeline, the following packages are needed.
+
+[dia_pipe](https://github.com/LSSTDESC/dia_pipe)
+[obs_lsst](https://github.com/lsst/obs_lsst)
+[ip_diffim](https://github.com/lsst/ip_diffim)
+[pipe_tasks](https://github.com/lsst/pipe_tasks)
