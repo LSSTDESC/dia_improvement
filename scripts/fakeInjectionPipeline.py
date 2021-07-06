@@ -95,7 +95,7 @@ class fakeInjectionPipeline():
             print('\n')
         print('injection is done')
                     
-    def get_subtraction_script(self, diff_dir, config, file_path='./subtraction.sh'):
+    def get_subtraction_script(self, diff_dir, config, file_path='./subtraction.sh', use_slurm=False):
         with open(f'{file_path}', "w+") as file:
             file.write('#！/bin/bash\n\n')
             for patch in self.patch_list:
@@ -115,14 +115,28 @@ class fakeInjectionPipeline():
                                 self.fake_dir, f'{patch}_{host_mag}_{visit}_{detector}_{filt}/fake_{fake_mag_str}'
                             )
 
-                            line = f'imageDifferenceDriver.py {fake_path} \\\n'
+                            line = f"imageDifferenceDriver.py {fake_path} \\\n"
                             file.write(line)
-                            line = f'    --output {diff_dir}/{patch}_{host_mag}_{visit}_{detector}_{filt}/diff_{fake_mag_str} \\\n'
+                            line = f"    --output {diff_dir}/{patch}_{host_mag}_{visit}_{detector}_{filt}/diff_{fake_mag_str} \\\n"
                             file.write(line)
-                            line = f'    --id visit={visit} detector={detector}  -C {config} \\\n'
+                            line = f"    --id visit={visit} detector={detector}  -C {config} \\\n"
                             file.write(line)
-                            line = '    --clobber-config --clobber-versions --cores 4\n\n'
-                            file.write(line)
+                            if use_slurm:
+                                line = "    --clobber-config --clobber-versions --cores 1 \\\n"
+                                file.write(line)
+                                line = "    --batch-type=slurm \\\n"
+                                file.write(line)
+                                line = "    --time 5000 \\\n"
+                                file.write(line)
+                                line = "    --mpiexec='-bind-to socket' \\\n"
+                                file.write(line)
+                                line = "    --batch-output logs_folder \\\n"
+                                file.write(line)
+                                line = "    --batch-options='-C haswell -q shared'\n\n"
+                                file.write(line)
+                            else:
+                                line = "    --clobber-config --clobber-versions --cores 4\n\n"
+                                file.write(line)
         print(f'please run this file: {file_path}')
         
     def get_detection(self, diff_dir, flux_dir, matched_radius = 4, db_name='detection.sqlite'):
@@ -210,9 +224,11 @@ class fakeInjectionPipeline():
                     for fake_mag in self.fake_mag_list:
                         fake_mag_str = str(fake_mag).replace('.', '')
                         flux_query = (
-                            f'SELECT id, coord_ra, coord_dec, base_PsfFlux_instFlux, base_PsfFlux_instFluxErr, '
-                            f'injected_instFlux, matched_status FROM fake_src '
-                            f"WHERE patch='{patch}' AND host_mag = host_mag AND fake_mag = {fake_mag_str} "
+                            f'SELECT id, coord_ra, coord_dec, base_NaiveCentroid_x, base_NaiveCentroid_y, '
+                            f'base_PsfFlux_instFlux, base_PsfFlux_instFluxErr, injected_instFlux, '
+                            f'patch, visit, filter, detector, '
+                            f'host_mag, fake_mag, matched_status FROM fake_src '
+                            f"WHERE patch='{patch}' AND host_mag = '{host_mag}' AND fake_mag = '{fake_mag_str}' "
                             f"AND visit = {visit} AND filter = '{filt}' AND detector = {detector} AND matched_status = 1"
                             )
                         detected_coord = pd.read_sql_query(flux_query, flux_conn)
@@ -240,8 +256,6 @@ class fakeInjectionPipeline():
                         filt = row['filter']
                         detector = row['detector']
                         
-
-
                         for fake_mag in self.fake_mag_list:
                             fake_mag_str = str(fake_mag).replace('.', '')
                             
@@ -273,3 +287,36 @@ class fakeInjectionPipeline():
                             file.write(line)
                 print('\n')
         print(f'please run this file: {file_path}')
+        
+    def get_forced_db(self, coord_dir, forced_dir, db_name='forced.sqlite'):
+        """base_PsfFlux_instFlux_diaSrc, base_PsfFlux_instFlux_forced, injected_instFlux
+        """
+        dbpath = os.path.join(forced_dir, db_name)
+        dbconn = sqlite3.connect(dbpath, timeout=60)
+        joint_full = pd.DataFrame()
+        for patch in self.patch_list:
+            for host_mag in self.host_mag_list:
+                calexp_info = self.calexp_info_dict[f'{patch}_{host_mag}']
+                for index, row in calexp_info.iterrows():
+                    visit = row['visit']
+                    filt = row['filter']
+                    detector = row['detector']
+                    for fake_mag in self.fake_mag_list:
+                        fake_mag_str = str(fake_mag).replace('.', '')
+                        coord_path = os.path.join(
+                                coord_dir, f'{patch}_{host_mag}_{visit}_{detector}_{filt}/coord_{fake_mag_str}.fits'
+                            )
+                        forced_path = os.path.join(
+                            forced_dir,
+                            f'{patch}_{host_mag}_{visit}_{detector}_{filt}/forced_{fake_mag_str}/forced_{visit}_{detector}.fits'
+                        )
+                        coord_table = Table.read(coord_path, format='fits')
+                        forced_table = Table.read(forced_path, format='fits')
+                        table_len = len(forced_table)
+                        forced_table.remove_columns(['flags'])
+                        
+                        coord_df = coord_table.to_pandas()
+                        forced_df = forced_table.to_pandas()
+                        joint_df = coord_df.merge(forced_df, left_on='id', right_on='dia_object_id', suffixes=('_diaSrc', '_forced'))
+                        joint_full = joint_full.append(joint_df)
+        joint_full.to_sql('forced', dbconn, if_exists='append')
