@@ -31,7 +31,7 @@ Reference:
 [ZOGY algorithm](https://arxiv.org/abs/1601.02655)
 [Regularization and model selection techniques](https://arxiv.org/pdf/1512.04655.pdf)
 
-### Software Dependencies
+## 3. Software Dependencies
 
 To successfully run the fake injection pipeline, the following packages are needed.
 
@@ -39,3 +39,8 @@ To successfully run the fake injection pipeline, the following packages are need
 [obs_lsst](https://github.com/lsst/obs_lsst)
 [ip_diffim](https://github.com/lsst/ip_diffim)
 [pipe_tasks](https://github.com/lsst/pipe_tasks)
+
+## 4. Working Directories
+
+- DIA shared space `/global/cfs/cdirs/desc-sn/dia/data/shl159`
+- CSCRATCH1 `/global/cscratch1/sd/shl159`
