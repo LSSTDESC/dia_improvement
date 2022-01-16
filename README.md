@@ -40,6 +40,10 @@ To successfully run the fake injection pipeline, the following packages are need
 [ip_diffim](https://github.com/lsst/ip_diffim)
 [pipe_tasks](https://github.com/lsst/pipe_tasks)
 
+ To install the latest Jupyter notebook kernel, run the following code.
+ 
+ `source /global/common/software/lsst/common/miniconda/kernels/setup.sh`
+
 ## 4. Working Directories
 
 - DIA shared space `/global/cfs/cdirs/desc-sn/dia/data/shl159`
