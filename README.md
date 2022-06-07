@@ -61,7 +61,9 @@ cd ..
 
 checkout proper commit (HEAD -> u/wmwv/dia_apcorr, origin/u/wmwv/dia_apcorr, Actually create the applyApCorr subtask.)
 ```
+cd pipe_tasks
 git checkout -b fake_test 7c1b45f03a170bb471028729aad273843dfa3b28
+cd ..
 ```
 
  To install the latest Jupyter notebook kernel, run the following code.
