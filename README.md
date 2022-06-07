@@ -35,19 +35,13 @@ Reference:
 
 ## 3. Software Dependencies
 
-To successfully run the fake injection pipeline, the following packages are needed.
-
-[dia_pipe](https://github.com/LSSTDESC/dia_pipe)
-
-[obs_lsst](https://github.com/lsst/obs_lsst)
-
-[pipe_tasks](https://github.com/lsst/pipe_tasks)
+To successfully run the fake injection pipeline, we need to install [dia_pipe](https://github.com/LSSTDESC/dia_pipe), [obs_lsst](https://github.com/lsst/obs_lsst), and [pipe_tasks](https://github.com/lsst/pipe_tasks).
 
 Install packages:
 
 - obs_lsst: git clone https://github.com/lsst/obs_lsst.git
 
-checkout proper branch:
+checkout proper commit:
 ```
 cd obs_lsst
 git checkout -b fake_test 30368a2b8c2941f1a04c704048c33e056a6af57b
