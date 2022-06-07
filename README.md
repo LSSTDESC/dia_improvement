@@ -50,7 +50,7 @@ cd ..
 
 - dia_pipe: git clone https://github.com/LSSTDESC/dia_pipe.git
 
-checkout proper commit
+checkout proper commit (HEAD, origin/#19, Create output directory if it doesn't exist in forcedPhotCatalogDiaTask)
 ```
 cd dia_pipe
 git checkout -b fake_test 8ae16a9f5e5c1e4f174626b7f1e002b9d0c69b8f
@@ -58,6 +58,11 @@ cd ..
 ```
 
 - pipe_tasks: git clone https://github.com/lsst/pipe_tasks.git
+
+checkout proper commit (HEAD -> u/wmwv/dia_apcorr, origin/u/wmwv/dia_apcorr, Actually create the applyApCorr subtask.)
+```
+git checkout -b fake_test 7c1b45f03a170bb471028729aad273843dfa3b28
+```
 
  To install the latest Jupyter notebook kernel, run the following code.
  
