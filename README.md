@@ -37,8 +37,29 @@ To successfully run the fake injection pipeline, the following packages are need
 
 [dia_pipe](https://github.com/LSSTDESC/dia_pipe)
 [obs_lsst](https://github.com/lsst/obs_lsst)
-[ip_diffim](https://github.com/lsst/ip_diffim)
 [pipe_tasks](https://github.com/lsst/pipe_tasks)
+
+Install packages:
+
+- obs_lsst: git clone https://github.com/lsst/obs_lsst.git
+
+checkout proper branch:
+```
+cd obs_lsst
+git checkout -b fake_test 30368a2b8c2941f1a04c704048c33e056a6af57b
+cd ..
+```
+
+- dia_pipe: git clone https://github.com/LSSTDESC/dia_pipe.git
+
+checkout proper commit
+```
+cd dia_pipe
+git checkout -b fake_test 8ae16a9f5e5c1e4f174626b7f1e002b9d0c69b8f
+cd ..
+```
+
+- pipe_tasks: git clone https://github.com/lsst/pipe_tasks.git
 
  To install the latest Jupyter notebook kernel, run the following code.
  
