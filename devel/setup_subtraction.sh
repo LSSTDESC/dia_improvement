@@ -7,14 +7,14 @@ setup lsst_distrib
 # We can comment out line 10 - line 12 once the scons is done.
 # `setup -jr dia_pipe` need to be kept.
 
-cd dia_pipe
-scons
-cd ..
+# cd dia_pipe
+# scons
+# cd ..
 setup -jr dia_pipe
 
-cd pipe_tasks
-scons
-cd ..
+# cd pipe_tasks
+# scons
+# cd ..
 setup -jr pipe_tasks
 
 export HDF5_USE_FILE_LOCKING=FALSE
