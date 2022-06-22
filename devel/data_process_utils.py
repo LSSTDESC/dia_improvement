@@ -199,6 +199,26 @@ def get_pix_coord_from_src(src_table, coord_type='base_NaiveCentroid'):
         coord_list.append([x, y])
     return coord_list
 
+
+######## PSF
+
+def get_psf_width(exp, scale='arcsec'):
+    psf = exp.getPsf()
+    psf_shape = psf.computeShape()
+    ixx = psf_shape.getIxx()
+    iyy = psf_shape.getIyy()
+    sigma = np.sqrt(( ixx + iyy) / 2 )
+    fwhm = 2.355 * sigma
+    if scale == 'pixel':
+        return fwhm
+    elif scale == 'arcsec':
+        wcs = exp.getWcs()
+        scale = wcs.getPixelScale().asArcseconds()
+        return fwhm * scale
+    else:
+        print("scale should be either 'arcsec' or 'pixel' ")
+        return None
+
 ######## In Image
 
 def sep_coord(dist_matrix, sep):
@@ -385,6 +405,8 @@ def remove_variable(src_df, bbox, wcs,
                     src_coord=['base_NaiveCentroid_x', 'base_NaiveCentroid_y'], matched_radius=4):
     src_xy = src_df.loc[:, src_coord].to_numpy()
     variable_xy = get_variable_xy(bbox, wcs)
+    if len(variable_xy) == 0 or len(src_xy) == 0:
+        return src_df
     matched_status, matched_id = two_direction_match(src_xy, variable_xy, radius=matched_radius)
     keep_id = matched_status == False
     return src_df[keep_id].copy().reset_index(drop=True)

@@ -9,6 +9,44 @@ from lsst.daf.persistence import Butler
 import injection_utils as iu
 import data_process_utils as dpu
 
+def get_calexp_injection_dict(patch_list, host_mag_range_list, dbpath):
+    
+    conn = sqlite3.connect(dbpath)
+    calexp_info_dict = {}
+    injection_coord_dict = {}
+
+    for patch in patch_list:
+        patch_1, patch_2 = patch[0], patch[1]
+    
+        for host_mag in host_mag_range_list:
+            min_mag = host_mag[0]
+            max_mag = host_mag[1]
+
+            calexp_info_query = (f'SELECT distinct(visit), filter, detector FROM injection_coord WHERE patch_1={patch_1} AND '
+                                 f'patch_2={patch_2} AND min_host_mag = {min_mag} AND max_host_mag = {max_mag}'
+                                )
+            calexp_info = pd.read_sql_query(calexp_info_query, conn)
+
+            calexp_info_dict[f'{patch}_{min_mag}_{max_mag}'] = calexp_info
+
+        for host_mag in host_mag_range_list:
+            min_mag = host_mag[0]
+            max_mag = host_mag[1]
+            calexp_info = calexp_info_dict[f'{patch}_{min_mag}_{max_mag}']
+            for idx, row in calexp_info.iterrows():
+                visit = row['visit']
+                filt = row['filter']
+                detector = row['detector']
+                coord_query = (
+                    f'SELECT calexp_coord_x, calexp_coord_y FROM injection_coord '
+                    f"WHERE patch_1={patch_1} AND patch_2={patch_2} AND min_host_mag = {min_mag} AND max_host_mag = {max_mag} "
+                    f"AND visit = {visit} AND filter = '{filt}' AND detector = {detector}"
+                )
+                coord = pd.read_sql_query(coord_query, conn).to_numpy()
+                injection_coord_dict[f'{patch}_{int(min_mag)}_{int(max_mag)}_{int(visit)}_{int(detector)}_{filt}'] = coord
+    return calexp_info_dict, injection_coord_dict
+
+
 class fakeInjectionPipeline():
     """fake_dir, patch_list, host_mag_list, fake_mag_list, calexp_info_dict, injection_coord_dict
        
@@ -147,10 +185,8 @@ class fakeInjectionPipeline():
         dbpath = os.path.join(flux_dir, db_name)
         dbconn = sqlite3.connect(dbpath, timeout=60)
         for patch in self.patch_list:
-            print('patch: ', patch)
             
             for host_mag in self.host_mag_list:
-                print('host mag: ', host_mag)
                 calexp_info = self.calexp_info_dict[f'{patch}_{host_mag}']
                 
                 for index, row in calexp_info.iterrows():
@@ -161,6 +197,7 @@ class fakeInjectionPipeline():
 
                     injection_coords = self.injection_coord_dict[f'{patch}_{host_mag}_{visit}_{detector}_{filt}']
                     for fake_mag in self.fake_mag_list:
+                        print(f'patch {patch}, visit {visit}, filter {filt}, detector {detector}, fake mag {fake_mag}')
                         fake_mag_str = str(fake_mag).replace('.', '')
 
                         src_repo = os.path.join(
