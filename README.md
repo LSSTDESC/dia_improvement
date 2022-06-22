@@ -74,3 +74,7 @@ cd ..
 
 - DIA shared space `/global/cfs/cdirs/desc-sn/dia/data/shl159`
 - CSCRATCH1 `/global/cscratch1/sd/shl159`
+
+## Links
+
+- [GCR Catalogs](https://github.com/LSSTDESC/gcr-catalogs)
