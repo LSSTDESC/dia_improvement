@@ -11,7 +11,7 @@ There are several aspects of the DIA we need to evaluate.
 - The efficiency vs. source magnitude. The 50% cutoff point.
 - The flux recovery of the DIA algorithms.
 - The false positive rate.
-- FLAGS which are useful to filtering fakse positive detections.
+- FLAGS which are useful to filtering false positive detections.
 - The effect of PSF shapes of the template image and the science image.
 - The optimal configs of the algorithms.
 - The comparison of the Alard-Lupton(AL) algorithm and the ZOGY algorithm.
@@ -72,7 +72,7 @@ cd ..
 
 ## 4. Working Directories
 
-- DIA shared space `/global/cfs/cdirs/desc-sn/dia/data/shl159`
+- DIA shared space `/global/cfs/cdirs/desc-dia/data/shl159/projects`
 - CSCRATCH1 `/global/cscratch1/sd/shl159`
 
 ## Links
