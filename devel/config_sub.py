@@ -4,9 +4,8 @@ patch_list = ['00', '11', '22', '33', '44', '55', '66']
 host_mag_list = ['20_21', '21_22', '22_23', '23_24', '24_25']
 fake_mag_list = [20]
 injection_db_path = './data/table/gal_4639/injection_coord.sqlite'
-host_mag_range_list = [(20, 21), (21, 22), (22,23), (23, 24), (24, 25)]
 calexp_info_dict, injection_coord_dict = fip.get_calexp_injection_dict(
-    patch_list, host_mag_range_list, dbpath=injection_db_path
+    patch_list, host_mag_list, dbpath=injection_db_path
 )
 
 fake_dir = f'./data/patch_0to6/injection'

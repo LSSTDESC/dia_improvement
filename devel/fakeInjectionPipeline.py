@@ -9,7 +9,7 @@ from lsst.daf.persistence import Butler
 import injection_utils as iu
 import data_process_utils as dpu
 
-def get_calexp_injection_dict(patch_list, host_mag_range_list, dbpath):
+def get_calexp_injection_dict(patch_list, host_mag_list, dbpath):
     
     conn = sqlite3.connect(dbpath)
     calexp_info_dict = {}
@@ -18,9 +18,10 @@ def get_calexp_injection_dict(patch_list, host_mag_range_list, dbpath):
     for patch in patch_list:
         patch_1, patch_2 = patch[0], patch[1]
     
-        for host_mag in host_mag_range_list:
-            min_mag = host_mag[0]
-            max_mag = host_mag[1]
+        for host_mag in host_mag_list:
+            host_mag_range = host_mag.split('_')
+            min_mag = int(host_mag_range[0])
+            max_mag = int(host_mag_range[1])
 
             calexp_info_query = (f'SELECT distinct(visit), filter, detector FROM injection_coord WHERE patch_1={patch_1} AND '
                                  f'patch_2={patch_2} AND min_host_mag = {min_mag} AND max_host_mag = {max_mag}'
@@ -29,9 +30,10 @@ def get_calexp_injection_dict(patch_list, host_mag_range_list, dbpath):
 
             calexp_info_dict[f'{patch}_{min_mag}_{max_mag}'] = calexp_info
 
-        for host_mag in host_mag_range_list:
-            min_mag = host_mag[0]
-            max_mag = host_mag[1]
+        for host_mag in host_mag_list:
+            host_mag_range = host_mag.split('_')
+            min_mag = int(host_mag_range[0])
+            max_mag = int(host_mag_range[1])
             calexp_info = calexp_info_dict[f'{patch}_{min_mag}_{max_mag}']
             for idx, row in calexp_info.iterrows():
                 visit = row['visit']
@@ -45,6 +47,23 @@ def get_calexp_injection_dict(patch_list, host_mag_range_list, dbpath):
                 coord = pd.read_sql_query(coord_query, conn).to_numpy()
                 injection_coord_dict[f'{patch}_{int(min_mag)}_{int(max_mag)}_{int(visit)}_{int(detector)}_{filt}'] = coord
     return calexp_info_dict, injection_coord_dict
+
+def check_exsistance(patch_list, host_mag_list, fake_mag_list, calexp_info_dict, diff_dir):
+    for patch in patch_list:
+        for host_mag in host_mag_list:
+            calexp_info = calexp_info_dict[f'{patch}_{host_mag}']
+            for index, row in calexp_info.iterrows():
+                visit = row['visit']
+                filt = row['filter']
+                detector = row['detector']
+                for fake_mag in fake_mag_list:
+                    fake_mag_str = str(fake_mag).replace('.', '')
+
+                    diff_path = os.path.join(
+                        diff_dir, f'{patch}_{host_mag}_{visit}_{detector}_{filt}/diff_{fake_mag_str}/deepDiff'
+                    )
+                    if not os.path.exists(diff_path):
+                        print(diff_path)
 
 
 class fakeInjectionPipeline():

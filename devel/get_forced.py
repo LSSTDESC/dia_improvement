@@ -4,7 +4,7 @@ import fakeInjectionPipeline as fip
 
 patch_list = ['00', '11', '22', '33', '44', '55', '66']
 host_mag_list = ['20_21', '21_22', '22_23', '23_24', '24_25']
-fake_mag_list = [20]
+fake_mag_list = [20, 21, 22, 23, 24]
 injection_db_path = './data/table/gal_4639/injection_coord.sqlite'
 
 calexp_info_dict, injection_coord_dict = fip.get_calexp_injection_dict(
@@ -13,14 +13,13 @@ calexp_info_dict, injection_coord_dict = fip.get_calexp_injection_dict(
 
 fake_dir = f'./data/patch_0to6/injection'
 
-
 injector = fip.fakeInjectionPipeline(
     fake_dir = fake_dir, patch_list = patch_list,
     host_mag_list=host_mag_list, fake_mag_list=fake_mag_list,
     calexp_info_dict=calexp_info_dict, injection_coord_dict=injection_coord_dict
 )
 
-for cf_type in ['al_preconv', 'al_decorr', 'al_convSci', 'al_convSciDecorr', 'al_spatial4', 'al_spatial4Pca']:
-    diff_dir =  f'./data/patch_0to6/diff/{cf_type}'
-    flux_dir = f'./data/patch_0to6/diff/{cf_type}/detection'
-    injector.get_detection(diff_dir=diff_dir, flux_dir=flux_dir, db_name=f'detection.sqlite')
+cf_type = 'default'
+coord_dir = f'./data/patch_0to6/diff/al_{cf_type}/coord'
+forced_dir = f'./data/patch_0to6/diff/al_{cf_type}/forced'
+injector.get_forced_db(coord_dir, forced_dir, db_name='forced.sqlite')
