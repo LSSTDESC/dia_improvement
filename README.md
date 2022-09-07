@@ -76,8 +76,8 @@ cd ..
 - CSCRATCH1 `/global/cscratch1/sd/shl159`
 
 ## 5. Measurements Database
-- diaSrc flux: fake_src table stores fake information, and artifact table stores artifact information.
-- forced photometry: forced table stores forced photometry information and matched diaSrc information.
+- diaSrc flux: `fake_src` table stores fake information, and `artifact` table stores artifact information.
+- forced photometry: `forced` table stores forced photometry information and matched diaSrc information.
 
 ## Links
 
