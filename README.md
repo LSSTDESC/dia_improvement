@@ -75,6 +75,10 @@ cd ..
 - DIA shared space `/global/cfs/cdirs/desc-dia/data/shl159/projects`
 - CSCRATCH1 `/global/cscratch1/sd/shl159`
 
+## 5. Measurements Database
+- diaSrc flux: fake_src table stores fake information, and artifact table stores artifact information.
+- forced photometry: forced table stores forced photometry information and matched diaSrc information.
+
 ## Links
 
 - [GCR Catalogs](https://github.com/LSSTDESC/gcr-catalogs)
