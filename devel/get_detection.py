@@ -21,9 +21,8 @@ injector = fip.fakeInjectionPipeline(
 
 cf_type = 'default'
 diff_dir =  f'./data/patch_0to6/diff/al_{cf_type}'
-# flux_dir = f'./data/patch_0to6/diff/al_{cf_type}/detection'
-
-# injector.get_detection(diff_dir=diff_dir, flux_dir=flux_dir, db_name=f'detection.sqlite')
+flux_dir = f'./data/patch_0to6/diff/al_{cf_type}/detection'
+injector.get_detection(diff_dir=diff_dir, flux_dir=flux_dir, db_name=f'detection.sqlite')
 
 flux_db_path = f'./data/patch_0to6/diff/al_{cf_type}/detection/detection.sqlite'
 coord_dir = f'./data/patch_0to6/diff/al_{cf_type}/coord'
