@@ -91,7 +91,7 @@ A. In the `desc_stack` terminal, run `python ./select_hosts.py`. This script wil
 
 B. In the `desc_stack` terminal, run `python ./inject_fakes.py`. This script will inject fake sources onto calexp exposures and generate a script for image difference. The name of the difference difference script depends on the configuration we choose.
 
-C. In the `image_difference` terminal, run the script generated in step B.
+C. In the `image_difference` terminal, run the script generated in step B. Some subtractions may fail if we use `slurm`. The `subtraction_exsistance.ipynb` notebook can help us know which subtraction fail. We can instead run them locally.
 
 D. In the `desc_stack` terminal, run `python get_detection.py`. The measurements from the DIA pipeline will be saved into a local database. The `fake_src` table of the databse stores synthetic source information, and the `artifact` table stores artifact information. A script for performing forced photometry will be generated.
 
