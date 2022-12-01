@@ -75,14 +75,23 @@ cd ..
 - DIA shared space `/global/cfs/cdirs/desc-dia/data/shl159/projects`
 - CSCRATCH1 `/global/cscratch1/sd/shl159`
 
-## 5.Pipeline
+## 5. Setup Working Terminals
 
 We work in the devel directory of the dia_improvement repo. We need to open two terminals to run our pipeline code. Let us call one terminal as `image_difference` and the other as `desc_stack`.
 
 In the `image_difference` termianl, run `source ./setup_subtraction.sh` (We also need to uncomment the code related to the `scons` command at the first time).
+
 In the `desc_stack` terminal, run `source setup_desc_stack.sh`.
 
-## 6. Measurements Database
+We need to switch between these terminals to complete our analysis pipeline.
+
+## 6. Analysis Pipeline.
+
+A. In the `desc_stack` terminal, run `python ./select_hosts.py`. This script will select host sources for injection. We can also work in the `host_selection.ipynb` notebook with the `desc-kernel` to achieve the same goal. This notebook also includes code which test the selection result.
+B. In the `desc_stack` terminal, run `python ./inject_fakes.py`. This script will inject fake sources onto calexp exposures and generate a script for image difference. The name of the difference difference script depends on the configuration we choose.
+C.
+
+## 7. Measurements Database
 - diaSrc flux: `fake_src` table stores fake information, and `artifact` table stores artifact information.
 - forced photometry: `forced` table stores forced photometry information and matched diaSrc information.
 
