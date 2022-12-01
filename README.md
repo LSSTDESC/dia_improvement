@@ -75,7 +75,14 @@ cd ..
 - DIA shared space `/global/cfs/cdirs/desc-dia/data/shl159/projects`
 - CSCRATCH1 `/global/cscratch1/sd/shl159`
 
-## 5. Measurements Database
+## 5.Pipeline
+
+We work in the devel directory of the dia_improvement repo. We need to open two terminals to run our pipeline code. Let us call one terminal as `image_difference` and the other as `desc_stack`.
+
+In the `image_difference` termianl, run `source ./setup_subtraction.sh` (We also need to uncomment the code related to the `scons` command at the first time).
+In the `desc_stack` terminal, run `source setup_desc_stack.sh`.
+
+## 6. Measurements Database
 - diaSrc flux: `fake_src` table stores fake information, and `artifact` table stores artifact information.
 - forced photometry: `forced` table stores forced photometry information and matched diaSrc information.
 
