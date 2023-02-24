@@ -1,6 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from numpy import linalg as LA
+from astropy.table import Table
+from astropy.coordinates import SkyCoord, match_coordinates_sky
+from astropy import units as u
 from lsst.daf.persistence import Butler
 import lsst.geom as geom
 import lsst.afw.image as afwImage
@@ -389,6 +392,15 @@ def two_direction_match(xy, cat_xy, radius=4):
     matched_status = np.logical_and(within_r, cross_match)
     return matched_status, idx
 
+def two_direction_skymatch(coord, cat_coord, radius=0.4 * u.arcsec):
+    idx, sep2d, _ = match_coordinates_sky(coord, cat_coord)
+    idx_, _, _ = match_coordinates_sky(cat_coord, coord)
+    sep2d = sep2d.to(u.arcsec)
+    dist_status = sep2d < radius
+    matched_status = idx_[idx] == np.arange(len(idx))
+    matched_status = np.logical_and(dist_status, matched_status)
+    return matched_status, idx
+
 ####### Table Process
 
 def remove_flag(src_df, flag_list=None):
@@ -400,6 +412,24 @@ def remove_flag(src_df, flag_list=None):
     flags = src_df.loc[:, flag_list]
     keep_id = (flags.sum(axis=1) == 0).to_numpy()
     return src_df[keep_id].copy().reset_index(drop=True)
+
+def remove_flag_astropy(src_table, flag_list=None):
+
+    src_df = src_table.to_pandas()
+    flags = src_df.loc[:, flag_list]
+    keep_id = (flags.sum(axis=1) == 0).to_numpy()
+    src_df = src_df[keep_id].copy().reset_index(drop=True)
+    flag_removed =  Table.from_pandas(src_df)
+    return flag_removed
+
+def keep_flag_astropy(src_table, flag_list=None):
+
+    src_df = src_table.to_pandas()
+    flags = src_df.loc[:, flag_list]
+    keep_id = (flags.sum(axis=1) >0).to_numpy()
+    src_df = src_df[keep_id].copy().reset_index(drop=True)
+    flag_removed =  Table.from_pandas(src_df)
+    return flag_removed
 
 def remove_variable(src_df, bbox, wcs,
                     src_coord=['base_NaiveCentroid_x', 'base_NaiveCentroid_y'], matched_radius=4):
