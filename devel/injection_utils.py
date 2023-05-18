@@ -26,6 +26,8 @@ def inject_star(exposure, photoCalib, x, y, magVar, poisson=False, seed=0):
     xy = geom.Point2D(x, y)
     psf = exposure.getPsf()
     starIm = psf.computeImage(xy)
+    # Discussions of why chossing the calibFluxRadius = 12
+    # https://community.lsst.org/t/why-are-fake-sources-corrected-to-mean-the-integrated-flux-within-calibfluxradius/4110
     calibFluxRadius = 12
     correctedFlux = psf.computeApertureFlux(calibFluxRadius, xy)
     starIm /= correctedFlux

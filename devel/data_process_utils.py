@@ -392,7 +392,15 @@ def two_direction_match(xy, cat_xy, radius=4):
     matched_status = np.logical_and(within_r, cross_match)
     return matched_status, idx
 
+def one_direction_skymatch(coord, cat_coord, radius=0.4 * u.arcsec):
+    # coord is in degree unit
+    idx, sep2d, _ = match_coordinates_sky(coord, cat_coord)
+    sep2d = sep2d.to(u.arcsec)
+    matched_status = sep2d < radius
+    return matched_status, idx
+
 def two_direction_skymatch(coord, cat_coord, radius=0.4 * u.arcsec):
+    # coord is in degree unit
     idx, sep2d, _ = match_coordinates_sky(coord, cat_coord)
     idx_, _, _ = match_coordinates_sky(cat_coord, coord)
     sep2d = sep2d.to(u.arcsec)

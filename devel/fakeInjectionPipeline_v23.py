@@ -63,9 +63,9 @@ def check_exsistance(patch_list, host_mag_list, fake_mag_list, calexp_info_dict,
                     fake_mag_str = str(fake_mag).replace('.', '')
 
                     diff_path = os.path.join(
-                        diff_dir, f'{patch}_{host_mag}_{visit}_{detector}_{filt}/diff_{fake_mag_str}/deepDiff'
+                        diff_dir, f'{patch}_{host_mag}_{visit}_{detector}_{filt}/diff_{fake_mag_str}/deepDiff/*/*/diffexp*.fits'
                     )
-                    if not os.path.exists(diff_path):
+                    if not len(glob.glob(diff_path)) == 1:
                         print(diff_path)
 
 
