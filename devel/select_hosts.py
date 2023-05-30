@@ -357,6 +357,7 @@ for i in range(7):
         gal_s2n_cut20 = gal_s2n_cut20.append(gal_sep)
     print('\n')
 gal_s2n_cut20 = gal_s2n_cut20.reset_index(drop=True)
+gal_s2n_cut20.to_csv('./data/table/gal_4639/gal_s2n_cut20.csv', index=False)
 print('monitoring dtypes')
 print(gal_s2n_cut20.dtypes)
 print('\n')
