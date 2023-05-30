@@ -78,7 +78,7 @@ E. Kernel spatial degree of freedom: `spatial_sub_m20_m23.py` generates scripts 
 
 F. Configuration: (optional, same teminals as step G.)`config_sub_m20_m23.py` and `config_det_m20_m23.py` includes code to perform analysis with different configuration setup.
 
-G. We run the folowing scripts to prepare results for analysis. `get_image_info_20_21_m20.py` (desc_stack terminal), `get_coadd.py` (desc_stack terminal), `get_background_souraces.py` (desc_stack terminal), `get_background_sources_sat_flag_applied.py` (desc_stack terminal)
+G. We run the folowing scripts to prepare results for analysis. `get_image_info_20_21_m20.py` (desc_stack terminal), `get_coadd.py` (desc_stack terminal), `get_background_souraces.py` (desc_stack terminal), `get_background_sources_sat_flag_applied.py` (desc_stack terminal), `get_default_config_v23.sh` (`image_difference` terminal).
 
 H. Analysis results are saved in DIA_Pipeline_Analysis notebooks (0-3). 
 
