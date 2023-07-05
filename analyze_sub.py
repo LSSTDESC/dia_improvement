@@ -36,7 +36,6 @@ import lsst.afw.display as afwDisplay
 import image_analyzer as im
 
 
-
 basepath = '/global/cfs/cdirs/lsst/groups/SN/dia/data/bos0109/test_subtractions/'
 
 visit, detector, filt = int(400390), int(157), 'g'
@@ -58,22 +57,28 @@ for an_alg in algs:
 
         exposure = diaSrc_butler.get(dataset_type, dataId=calexp_id)
         t = Table.read(os.path.join(basepath, data_name+tab_n))
-
-        x_list, y_list = t['base_NaiveCentroid_x'], t['base_NaiveCentroid_y']
+        if len(t) < 300:
+            tab = t
+        else:
+            ii = np.random.choice(np.arange(len(t)), size=300, replace=False)
+            tab = t[ii]
+        
+        x_list, y_list = tab['base_NaiveCentroid_x'], tab['base_NaiveCentroid_y']
         diasource_analyzer = im.ImageAnalyzer(exposure, x_list, y_list)
 
-        single_position = diasource_analyzer.cutout_analysis(1500, 1700, fill=False,
-                                                            clip_image=True,alpha=0.05,
-                                                            image_show=False, hist_show=False, 
-                                                            cov_show=False)
         global_analysis = diasource_analyzer.image_statistics(fill=False, clip_image=True, alpha=0.05)
         global_analysis['SUB_CODE'] = data_name
         results[data_name] = global_analysis
+
+        #single_position = diasource_analyzer.cutout_analysis(1500, 1700, fill=False,
+        #                                                    clip_image=True,alpha=0.05,
+        #                                                    image_show=False, hist_show=False, 
+        #                                                    cov_show=False)
 
 from astropy.table import vstack
 res = []
 for k, v in results.items():
     res.append(v)
-vstack(res)
+res = vstack(res)
+res.write('results_subs_short.csv', format='csv')
 
-    

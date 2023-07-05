@@ -1,17 +1,10 @@
 
-# Configurations that failed
-#              --config imageDifference.doPreconvolve=True \
-#              --config doWriteSubtractedExp=True \
-#              --config doWriteMatchedExp=True \
-#              --config doDecorrelation=False \
-#              --config doSpatiallyVarying=False \
-#                --config imageDifference.writeTemplate=True \
 # TEST AA
 time nice -10 imageDifferenceDriver.py  \
                 $SCRATCH/templates_rect \
-                --output /global/cfs/cdirs/desc-sn/dia/data/bos0109/test_subtractions/test_AL_AA \
+                --output /global/cfs/cdirs/desc-sn/dia/data/bos0109/test_subtractions/test_AL_00 \
                 --id visit=400390 detector=157 \
-                -C ./configs/imageDifferenceDriver_config.py \
+                -C ./configs/imageDifferenceDriver_config_AL.py \
                 --config imageDifference.doDecorrelation=False \
                 --config imageDifference.convolveTemplate=False \
                 --batch-type=smp \
@@ -28,7 +21,7 @@ time nice -10 imageDifferenceDriver.py  \
               $SCRATCH/templates_rect \
               --output /global/cfs/cdirs/desc-sn/dia/data/bos0109/test_subtractions/test_AL_BA \
               --id visit=400390 detector=157 \
-              -C ./configs/imageDifferenceDriver_config.py \
+              -C ./configs/imageDifferenceDriver_config_AL.py \
               --config imageDifference.doDecorrelation=True \
               --config imageDifference.convolveTemplate=False \
               --batch-type=smp \
@@ -46,7 +39,7 @@ time nice -10 imageDifferenceDriver.py  \
                 $SCRATCH/templates_rect \
                 --output /global/cfs/cdirs/desc-sn/dia/data/bos0109/test_subtractions/test_AL_AB \
                 --id visit=400390 detector=157 \
-                -C ./configs/imageDifferenceDriver_config.py \
+                -C ./configs/imageDifferenceDriver_config_AL.py \
                 --config imageDifference.doDecorrelation=False \
                 --config imageDifference.convolveTemplate=True \
                 --batch-type=smp \
@@ -63,7 +56,7 @@ time nice -10 imageDifferenceDriver.py  \
               $SCRATCH/templates_rect \
               --output /global/cfs/cdirs/desc-sn/dia/data/bos0109/test_subtractions/test_AL_BB \
               --id visit=400390 detector=157 \
-              -C ./configs/imageDifferenceDriver_config.py \
+              -C ./configs/imageDifferenceDriver_config_AL.py \
               --config imageDifference.doDecorrelation=True \
               --config imageDifference.convolveTemplate=True \
               --batch-type=smp \
@@ -85,7 +78,7 @@ time nice -10 imageDifferenceDriver.py  \
                 $SCRATCH/templates_rect \
                 --output /global/cfs/cdirs/desc-sn/dia/data/bos0109/test_subtractions/test_Z_AA \
                 --id visit=400390 detector=157 \
-                -C ./configs/imageDifferenceDriver_config.py \
+                -C ./configs/imageDifferenceDriver_config_zogy.py \
                 --config imageDifference.subtract='zogy' \
                 --config imageDifference.doDecorrelation=False \
                 --config imageDifference.convolveTemplate=True \
@@ -103,7 +96,7 @@ time nice -10 imageDifferenceDriver.py  \
               $SCRATCH/templates_rect \
               --output /global/cfs/cdirs/desc-sn/dia/data/bos0109/test_subtractions/test_Z_BA \
               --id visit=400390 detector=157 \
-              -C ./configs/imageDifferenceDriver_config.py \
+              -C ./configs/imageDifferenceDriver_config_zogy.py \
               --config imageDifference.subtract='zogy' \
               --config imageDifference.doDecorrelation=True \
               --config imageDifference.convolveTemplate=True \
@@ -121,7 +114,7 @@ time nice -10 imageDifferenceDriver.py  \
                 $SCRATCH/templates_rect \
                 --output /global/cfs/cdirs/desc-sn/dia/data/bos0109/test_subtractions/test_Z_AB \
                 --id visit=400390 detector=157 \
-                -C ./configs/imageDifferenceDriver_config.py \
+                -C ./configs/imageDifferenceDriver_config_zogy.py \
                 --config imageDifference.subtract='zogy' \
                 --config imageDifference.doDecorrelation=False \
                 --config imageDifference.convolveTemplate=True \
@@ -139,7 +132,7 @@ time nice -10 imageDifferenceDriver.py  \
               $SCRATCH/templates_rect \
               --output /global/cfs/cdirs/desc-sn/dia/data/bos0109/test_subtractions/test_Z_BB \
               --id visit=400390 detector=157 \
-              -C ./configs/imageDifferenceDriver_config.py \
+              -C ./configs/imageDifferenceDriver_config_zogy.py \
               --config imageDifference.subtract='zogy' \
               --config imageDifference.doDecorrelation=True \
               --config imageDifference.convolveTemplate=True \
@@ -154,3 +147,27 @@ time nice -10 imageDifferenceDriver.py  \
 
 
 
+
+# Configurations that failed
+#              --config imageDifference.doPreconvolve=True \
+#              --config doWriteSubtractedExp=True \
+#              --config doWriteMatchedExp=True \
+#              --config doDecorrelation=False \
+#              --config doSpatiallyVarying=False \
+#              --config imageDifference.writeTemplate=True \
+#              --config imageDifference.subtract.kernel='DF' \
+#              --config imageDifference.subtract.kernelBasisSet='delta-function' \
+
+time nice -10 imageDifferenceDriver.py  \
+    $SCRATCH/templates_rect \
+    --output /global/cfs/cdirs/desc-sn/dia/data/bos0109/test_subtractions/test_AL_deltafunction \
+    --id visit=400390 detector=157 \
+    -C ./configs/imageDifferenceDriver_config_DF.py \
+    --batch-type=smp \
+    --mpiexec='-bind-to socket' \
+    --cores 4 --job sub_v400390_AL_DF \
+    --time 500 \
+    --clobber-versions \
+    --clobber-config \
+    --batch-options='-C knl -q regular' > \
+        ./outputs/output_AL_deltafunction.txt
